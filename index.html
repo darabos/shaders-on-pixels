@@ -1,7 +1,7 @@
 <div id="palette">
   <span
     v-for="c in colors"
-    v-bind:style="'background-color: ' + c"
+    v-bind:style="'background-color: #' + c.getHexString()"
     v-on:click="colorClicked(c)"
   ></span>
 </div>
@@ -14,6 +14,7 @@
 }
 </style>
 
+<script src="three.js"></script>
 <script src="vue.js"></script>
 <script>
 
@@ -34,19 +35,55 @@ const palettes = {
   na16: `#8c8fae #584563 #3e2137 #9a6348 #d79b7d #f5edba #c0c741 #647d34 #e4943a #9d303b #d26471 #70377f #7ec4c1 #34859d #17434b #1f0e1c`,
 };
 function setPalette(p) {
-  pal.colors = palettes[p].split(/ /);
+  pal.colors = palettes[p].split(/ /).map(c => new THREE.Color(c));
   currentColor = pal.colors[0];
 }
 setPalette('na16');
 
-c.style.backgroundColor = pal.colors[15];
 function draw(e) {
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = currentColor;
   const [x, y] = [Math.floor(e.layerX / 16), Math.floor(e.layerY / 16)];
-  ctx.fillRect(16*x, 16*y, 16, 16);
+  data[(x+y*W)*4] = currentColor.r*255;
+  data[(x+y*W)*4+1] = currentColor.g*255;
+  data[(x+y*W)*4+2] = currentColor.b*255;
+  data[(x+y*W)*4+3] = 255;
+  texture.needsUpdate = true;
+  renderer.render(scene, camera);
 }
 c.onmousemove = e => e.buttons && draw(e);
 c.onmousedown = e => e.buttons && draw(e);
+
+const [W, H] = [30, 30];
+const data = new Uint8Array(4 * W * H);
+for (let i = 0; i < data.length; ++i) data[i] = i%4 === 3 ? 255 : pal.colors[15].toArray[i%4];
+const texture = new THREE.DataTexture(data, W, H);
+texture.needsUpdate = true;
+
+camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+scene = new THREE.Scene();
+const geometry = new THREE.PlaneGeometry(2, 2);
+const material = new THREE.ShaderMaterial({
+  uniforms: {tex: { value: texture } },
+  vertexShader: `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position, 1.0);
+}
+ `,
+  fragmentShader: `
+varying vec2 vUv;
+uniform sampler2D tex;
+void main() {
+  gl_FragColor = vec4(vUv.x,vUv.y,1,1);
+  gl_FragColor = texture2D(tex, vec2(vUv.x, 1.0-vUv.y));
+}
+ `,
+});
+const mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+renderer = new THREE.WebGLRenderer({ canvas: c });
+renderer.setPixelRatio( window.devicePixelRatio );
+renderer.setSize(480, 480);
+renderer.render(scene, camera);
 
 </script>
