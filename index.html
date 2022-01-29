@@ -1,0 +1,52 @@
+<div id="palette">
+  <span
+    v-for="c in colors"
+    v-bind:style="'background-color: ' + c"
+    v-on:click="colorClicked(c)"
+  ></span>
+</div>
+<canvas id="c" width="480" height="480"></canvas>
+<style>
+#palette span {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+}
+</style>
+
+<script src="vue.js"></script>
+<script>
+
+let currentColor = 'black';
+const pal = new Vue({
+  el: '#palette',
+  data: {
+    colors: [],
+  },
+  methods: {
+    colorClicked: c => {
+      currentColor = c;
+    },
+  },
+});
+
+const palettes = {
+  na16: `#8c8fae #584563 #3e2137 #9a6348 #d79b7d #f5edba #c0c741 #647d34 #e4943a #9d303b #d26471 #70377f #7ec4c1 #34859d #17434b #1f0e1c`,
+};
+function setPalette(p) {
+  pal.colors = palettes[p].split(/ /);
+  currentColor = pal.colors[0];
+}
+setPalette('na16');
+
+c.style.backgroundColor = pal.colors[15];
+function draw(e) {
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = currentColor;
+  const [x, y] = [Math.floor(e.layerX / 16), Math.floor(e.layerY / 16)];
+  ctx.fillRect(16*x, 16*y, 16, 16);
+}
+c.onmousemove = e => e.buttons && draw(e);
+c.onmousedown = e => e.buttons && draw(e);
+
+</script>
