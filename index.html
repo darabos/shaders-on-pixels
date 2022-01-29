@@ -1,3 +1,6 @@
+<select id="shadersdropdown" v-on:change="shaderSelected">
+  <option v-for="s in shaders" v-bind:value="s">{{ s }}</option>
+</select>
 <div id="palette">
   <span
     v-for="c in colors"
@@ -37,24 +40,39 @@ const palettes = {
 function setPalette(p) {
   pal.colors = palettes[p].split(/ /).map(c => new THREE.Color(c));
   currentColor = pal.colors[0];
+  c.style.backgroundColor = pal.colors[15].getHexString();
 }
 setPalette('na16');
 
 function draw(e) {
   const [x, y] = [Math.floor(e.layerX / 16), Math.floor(e.layerY / 16)];
-  data[(x+y*W)*4] = currentColor.r*255;
-  data[(x+y*W)*4+1] = currentColor.g*255;
-  data[(x+y*W)*4+2] = currentColor.b*255;
-  data[(x+y*W)*4+3] = 255;
-  texture.needsUpdate = true;
-  renderer.render(scene, camera);
+  const c = [...currentColor.toArray(), 1];
+  let change = false;
+  for (let i = 0; i < 4; ++i) {
+    if (data[(x+y*W)*4 + i] != c[i]) {
+      data[(x+y*W)*4 + i] = c[i]*255;
+      change = true;
+    }
+  }
+  if (change) {
+    localStorage.setItem('drawing', JSON.stringify([...data]));
+    texture.needsUpdate = true;
+    renderer.render(scene, camera);
+  }
 }
 c.onmousemove = e => e.buttons && draw(e);
 c.onmousedown = e => e.buttons && draw(e);
 
 const [W, H] = [30, 30];
-const data = new Uint8Array(4 * W * H);
-for (let i = 0; i < data.length; ++i) data[i] = i%4 === 3 ? 255 : pal.colors[15].toArray[i%4];
+function loadDrawing() {
+  try {
+    const v = JSON.parse(localStorage.getItem('drawing'));
+    console.log(v);
+    if (v) return v;
+  } catch (e) {}
+  return 4 * W * H;
+}
+const data = new Uint8Array(loadDrawing());
 const texture = new THREE.DataTexture(data, W, H);
 texture.needsUpdate = true;
 camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -85,7 +103,8 @@ function makeShader(g) {
       TextureSize: { value: [30, 30] },
       InputSize: { value: [30, 30] },
       OutputSize: { value: [480, 480] },
-      FrameCount: { value: 0 },
+      FrameCount: { value: 1 },
+      FrameDirection: { value: 1 },
       MVPMatrix: { value: [
         1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 0.0, 0.0,
@@ -101,12 +120,26 @@ function setShader(m) {
   renderer.render(scene, camera);
 }
 
-SHADERS = 'none xbrz-freescale'.split(/ /);
+const SHADERS = '-none- omniscale ntsc-adaptive ntsc-gauss ntsc-xot xbrz-freescale triangular'.split(/ /);
+SHADERS.sort();
+new Vue({
+  el: '#shadersdropdown',
+  data: {
+    shaders: SHADERS,
+  },
+  methods: {
+    shaderSelected: s => {
+        console.log(s.target.value);
+      loadShader(s.target.value).then(s => setShader(makeShader(s)));
+    },
+  },
+});
+
 async function loadShader(g) {
-  if (g === 'none') {
+  if (g === '-none-') {
     return DEFAULTSHADER;
   } else {
-    const r = await fetch(g);
+    const r = await fetch(g + '.glsl');
     if (!r.ok) {
       throw new Error('fetch failed');
     }
@@ -120,6 +153,4 @@ renderer = new THREE.WebGLRenderer({ canvas: c });
 renderer.setPixelRatio( window.devicePixelRatio );
 renderer.setSize(480, 480);
 renderer.render(scene, camera);
-
-loadShader('xbrz-freescale.glsl').then(g => setShader(makeShader(g)));
 </script>

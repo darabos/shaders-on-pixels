@@ -41,7 +41,7 @@
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
 #define VertexCoord vec4(position,1)
-#define TexCoord uv
+#define TexCoord vec2(uv.x, 1.-uv.y)
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -87,7 +87,6 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy * 1.0001;
-    TEX0.y = 1.-TEX0.y;
 }
 
 #elif defined(FRAGMENT)
