@@ -40,7 +40,8 @@
 // * of the file, but you are not obligated to do so. If you do not wish to   *
 // * do so, delete this exception statement from your version.                *
 // ****************************************************************************
-
+#define VertexCoord vec4(position,1)
+#define TexCoord uv
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
@@ -59,9 +60,7 @@
 #define COMPAT_PRECISION
 #endif
 
-COMPAT_ATTRIBUTE vec4 VertexCoord;
 COMPAT_ATTRIBUTE vec4 COLOR;
-COMPAT_ATTRIBUTE vec4 TexCoord;
 COMPAT_VARYING vec4 COL0;
 COMPAT_VARYING vec4 TEX0;
 
@@ -88,6 +87,7 @@ void main()
 {
     gl_Position = MVPMatrix * VertexCoord;
     TEX0.xy = TexCoord.xy * 1.0001;
+    TEX0.y = 1.-TEX0.y;
 }
 
 #elif defined(FRAGMENT)
@@ -371,6 +371,5 @@ void main()
   }
 
  	FragColor = vec4(res, 1.0);
- 	gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
 } 
 #endif
