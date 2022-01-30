@@ -120,8 +120,46 @@ function setShader(m) {
   renderer.render(scene, camera);
 }
 
-const SHADERS = '-none- omniscale ntsc-adaptive ntsc-gauss ntsc-xot xbrz-freescale triangular'.split(/ /);
-SHADERS.sort();
+const SHADERS = `
+2xScaleHQ
+4xScaleHQ
+bevel
+bicubic
+crt-Guest.r-mini
+crt-aperture
+crt-caligari
+crt-cgwg-fast
+crt-easymode
+crt-geom
+crt-hyllian-3d
+crt-hyllian-fast
+crt-lottes
+crt-mattias
+crt-nes-mini
+crt-pi
+cubic
+ddt
+dot
+epx
+fake-CRT-Geom
+fake-CRT-Geom-potato
+fakelottes
+fxaa
+lcd3x
+median_3x3
+median_5x5
+metacrt
+mmpx
+omniscale
+retro-v2
+reverse-aa
+sabr
+sameboy-lcd
+xbr-lv3
+xbrz-freescale
+zfast-crt
+`.trim().split('\n');
+SHADERS.unshift('-none-')
 new Vue({
   el: '#shadersdropdown',
   data: {
@@ -139,7 +177,7 @@ async function loadShader(g) {
   if (g === '-none-') {
     return DEFAULTSHADER;
   } else {
-    const r = await fetch(g + '.glsl');
+    const r = await fetch('shaders/' + g + '.glsl');
     if (!r.ok) {
       throw new Error('fetch failed');
     }
