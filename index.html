@@ -14,8 +14,16 @@
     ></span>
   </div>
 </div>
-<canvas id="c" width="480" height="480"></canvas>
+  <canvas id="c" width="480" height="480"></canvas>
+  <p>
+  If you draw something, it's saved in the browser. You can come back and continue later.
+  </p><p>
+  <a href="https://github.com/darabos/shaders-on-pixels">https://github.com/darabos/shaders-on-pixels</a>
+  </p>
 <style>
+html {
+  text-align: center;
+}
 #palette span {
   display: inline-block;
   width: 30px;
@@ -64,6 +72,7 @@ function draw(e) {
 }
 c.onmousemove = e => e.buttons && draw(e);
 c.onmousedown = e => e.buttons && draw(e);
+c.onclick = e => draw(e);
 
 const [W, H] = [30, 30];
 function loadDrawing() {
