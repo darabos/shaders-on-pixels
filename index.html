@@ -1,8 +1,8 @@
 <div id="app">
-  <select id="shadersdropdown" v-on:change="shaderSelected">
+  Shader: <select id="shadersdropdown" v-on:change="shaderSelected">
     <option v-for="s in shaders" v-bind:value="s">{{ s }}</option>
   </select>
-  <select id="palettesdropdown" v-on:change="paletteSelected">
+  Palette: <select id="palettesdropdown" v-on:change="paletteSelected">
     <option v-for="p in palettes" v-bind:value="p">{{ p }}</option>
   </select>
   <button v-on:click="clear">clear</button>
@@ -28,6 +28,9 @@ html {
   display: inline-block;
   width: 30px;
   height: 30px;
+}
+canvas {
+  position: relative;
 }
 </style>
 
